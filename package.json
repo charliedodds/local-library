@@ -8,10 +8,15 @@
 		"serverstart": "DEBUG=local-library:* npm run devstart"
 	},
 	"dependencies": {
+		"async": "^3.2.0",
 		"cookie-parser": "~1.4.4",
 		"debug": "~2.6.9",
+		"dotenv": "^9.0.2",
 		"express": "~4.16.1",
+		"express-validator": "^6.11.1",
 		"http-errors": "~1.6.3",
+		"luxon": "^1.27.0",
+		"mongoose": "^5.12.3",
 		"morgan": "~1.9.1",
 		"pug": "^2.0.4"
 	}
