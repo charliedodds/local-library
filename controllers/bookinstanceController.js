@@ -1,3 +1,7 @@
+const { body, validationResult } = require('express-validator');
+
+const Book = require('../models/book');
+const bookinstance = require('../models/bookinstance');
 const BookInstance = require('../models/bookinstance');
 
 // Display list of all BookInstances.
@@ -39,13 +43,60 @@ exports.bookinstance_detail = (req, res) => {
 };
 
 // Display BookInstance create form on GET.
-exports.bookinstance_create_get = (req, res) => {
-  res.send('NOT IMPLEMENTED: BookInstance create GET');
+exports.bookinstance_create_get = (req, res, next) => {
+  Book.find({}, 'title').exec((err, books) => {
+    if (err) return next(err);
+    res.render('bookinstance_form', {
+      title: 'Create Book Instance',
+      book_list: books,
+    });
+  });
 };
 
 // Handle BookInstance create on POST.
 exports.bookinstance_create_post = (req, res) => {
-  res.send('NOT IMPLEMENTED: BookInstance create POST');
+  body('book', 'Book must be specified').trim().isLength({ min: 1 }).escape(),
+    body('imprint', 'Imprint must be specified')
+      .trim()
+      .isLength({ min: 1 })
+      .escape(),
+    body('status').escape(),
+    body('due_back', 'Invalid date')
+      .optional({ checkFalsy: true })
+      .isISO8601()
+      .toDate(),
+    // Process request after above validation and sanitisation
+    (req, res, next) => {
+      const errors = validationResult(req);
+
+      const bookinstance = new BookInstance({
+        book: req.body.book,
+        imprint: req.body.imprint,
+        status: req.body.status,
+        due_back: req.body.due_back,
+      });
+
+      if (!errors.isEmpty()) {
+        // There are errors. Rerender form with values and errors
+        Book.find({}, 'title').exec((err, books) => {
+          if (err) return next(err);
+          res.render('bookinstance_form', {
+            title: 'Create Book Instance',
+            book_list: books,
+            selected_book: bookinstance.book._id,
+            errors: errors.array(),
+            bookinstance: bookinstance,
+          });
+        });
+        return;
+      } else {
+        // Form is valid
+        bookinstance.save((err) => {
+          if (err) return next(err);
+          res.redirect(bookinstance.url);
+        });
+      }
+    };
 };
 
 // Display BookInstance delete form on GET.
